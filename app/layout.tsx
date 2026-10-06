@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { LiveRefresh } from './live.tsx';
 
 export const metadata: Metadata = {
   title: '제주 풋살컵',
@@ -11,6 +12,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
     <html lang="ko">
       <body className="min-h-dvh bg-slate-100 text-slate-900 antialiased">
         <main className="mx-auto max-w-xl px-4 pb-16">{children}</main>
+        <LiveRefresh />
       </body>
     </html>
   );
