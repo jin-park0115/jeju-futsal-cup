@@ -3,7 +3,8 @@ import { Header, MatchCard, StandingsTable } from './ui.tsx';
 
 export default async function Home({ searchParams }: PageProps<'/'>) {
   const d = await loadDivision(parseDivision((await searchParams).d));
-  const knockout = (['third', 'final'] as const).map((stage) => d.views.find((v) => v.match.stage === stage)!);
+  // 결승 먼저. 토너먼트가 없는 부문(중등부 4팀 리그)은 비어 있다
+  const knockout = (['final', 'third'] as const).flatMap((stage) => d.views.filter((v) => v.match.stage === stage));
 
   return (
     <>
@@ -24,7 +25,7 @@ export default async function Home({ searchParams }: PageProps<'/'>) {
 
       {d.groups.map((g) => (
         <section key={g} className="mt-6">
-          <h2 className="mb-2 text-lg font-bold">{g}조</h2>
+          <h2 className="mb-2 text-lg font-bold">{d.groupLabel(g)}</h2>
           <StandingsTable s={d.standings[g]} slotLabel={d.slotLabel} />
           <div className="mt-3 space-y-2">
             {d.views
@@ -36,13 +37,16 @@ export default async function Home({ searchParams }: PageProps<'/'>) {
         </section>
       ))}
 
-      <section className="mt-6">
-        <h2 className="mb-2 text-lg font-bold">토너먼트</h2>
-        <div className="space-y-2">
-          <MatchCard v={knockout[1]} playerName={d.playerName} title="결승" />
-          <MatchCard v={knockout[0]} playerName={d.playerName} title="3·4위전" />
-        </div>
-      </section>
+      {knockout.length > 0 && (
+        <section className="mt-6">
+          <h2 className="mb-2 text-lg font-bold">토너먼트</h2>
+          <div className="space-y-2">
+            {knockout.map((v) => (
+              <MatchCard key={v.match.id} v={v} playerName={d.playerName} title={v.match.stage === 'final' ? '결승' : '3·4위전'} />
+            ))}
+          </div>
+        </section>
+      )}
     </>
   );
 }

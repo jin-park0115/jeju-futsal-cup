@@ -17,7 +17,7 @@ export default async function BracketPage({ params }: PageProps<'/[admin]/bracke
           {d.groups.map((g) => (
             <div key={g} className="mb-3">
               <p className="mb-1 text-sm font-semibold">
-                {g}조 {d.standings[g].complete ? '· 경기 종료' : '· 진행 중'}
+                {d.groupLabel(g)} {d.standings[g].complete ? '· 경기 종료' : '· 진행 중'}
                 {d.standings[g].rows.some((r) => r.tied) && <span className="ml-1 text-red-600">· 동률 있음(직접 지정 필요)</span>}
               </p>
               <StandingsTable s={d.standings[g]} slotLabel={d.slotLabel} />

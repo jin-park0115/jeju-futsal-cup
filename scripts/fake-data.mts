@@ -62,7 +62,7 @@ for (const division of ['high', 'middle'] as const) {
     const live = division === 'high' && i === group.length - 1;
     let hs = rand(4);
     const as = rand(4);
-    if (division === 'middle' && hs === as) hs++; // 2팀 조는 무승부면 동률이라 피한다
+    if (division === 'middle' && hs === as) hs++; // 중등부는 무승부를 피해 동률(최종 순위 미확정)을 줄인다
     await record(m.id, { team: teamOf.get(m.home_slot_id)!, goals: hs }, { team: teamOf.get(m.away_slot_id)!, goals: as }, live ? 'live' : 'finished');
   }
 
@@ -76,7 +76,7 @@ for (const division of ['high', 'middle'] as const) {
     continue;
   }
 
-  // 중등부는 토너먼트까지 끝낸다: 3·4위전은 승부차기, 결승은 정규 승부
+  // 중등부는 토너먼트가 있으면(5·6팀) 끝까지 진행: 3·4위전은 승부차기, 결승은 정규 승부
   const [goals, cards, fresh] = await Promise.all([
     must(db.from('goals').select('*')),
     must(db.from('cards').select('*')),

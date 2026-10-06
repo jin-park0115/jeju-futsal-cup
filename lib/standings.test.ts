@@ -114,3 +114,14 @@ test('자책골: 스코어엔 반영, 득점 순위에선 제외', () => {
   goals.push({ match_id: matches[0].id, player_id: p(1), scoring_team_id: 101, own_goal: false });
   assert.deepEqual(topScorers(goals), [{ player_id: p(1), goals: 2, rank: 1 }]);
 });
+
+test('4팀 단일 리그: 6경기 후 1~4위, A:3·A:4도 해석', () => {
+  // 1: 3승, 2: 2승, 3: 1승, 4: 0승
+  const { matches, goals } = play([1, 2, 1, 0], [3, 4, 1, 0], [1, 3, 1, 0], [2, 4, 1, 0], [1, 4, 1, 0], [2, 3, 1, 0]);
+  const s = computeStandings(slots(1, 2, 3, 4), matches, goals, [], players);
+  assert.equal(s.complete, true);
+  assert.deepEqual(order(s), [1, 2, 3, 4]);
+  assert.deepEqual(s.rows.map((r) => r.points), [9, 6, 3, 0]);
+  assert.equal(resolveSource('A:3', null, { A: s }), 103);
+  assert.equal(resolveSource('A:4', null, { A: s }), 104);
+});

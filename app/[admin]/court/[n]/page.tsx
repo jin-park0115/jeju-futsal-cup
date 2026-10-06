@@ -34,7 +34,7 @@ export default async function CourtPage({ params, searchParams }: PageProps<'/[a
           >
             <span className="text-slate-500">{v.match.start_time.slice(0, 5)}</span>
             <span className="min-w-0 flex-1 truncate">
-              {DIVISION_LABEL[d.division]} {v.match.stage === 'group' ? `${v.match.group}조` : STAGE[v.match.stage]} · {v.homeLabel} vs {v.awayLabel}
+              {DIVISION_LABEL[d.division]} {v.match.stage === 'group' ? d.groupLabel(v.match.group) : STAGE[v.match.stage]} · {v.homeLabel} vs {v.awayLabel}
             </span>
             <span className="text-slate-500">
               {v.score ? `${v.score[0]}:${v.score[1]} ` : ''}
@@ -81,7 +81,7 @@ export default async function CourtPage({ params, searchParams }: PageProps<'/[a
       <CourtPanel
         key={v.match.id}
         adminKey={admin}
-        title={`${court}구장 · ${v.match.start_time.slice(0, 5)} · ${DIVISION_LABEL[d.division]} ${v.match.stage === 'group' ? `${v.match.group}조` : STAGE[v.match.stage]}`}
+        title={`${court}구장 · ${v.match.start_time.slice(0, 5)} · ${DIVISION_LABEL[d.division]} ${v.match.stage === 'group' ? d.groupLabel(v.match.group) : STAGE[v.match.stage]}`}
         match={{ id: v.match.id, status: v.match.status, knockout: v.match.stage !== 'group', home_pk: v.match.home_pk, away_pk: v.match.away_pk }}
         home={{ team: v.home, label: v.homeLabel, players: roster(v.home) }}
         away={{ team: v.away, label: v.awayLabel, players: roster(v.away) }}

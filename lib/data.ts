@@ -72,6 +72,8 @@ export async function loadDivision(division: Division) {
   const slotById = new Map(slots.map((s) => [s.id, s]));
 
   const groups = [...new Set(slots.map((s) => s.group))].sort();
+  // 조가 하나뿐이면(중등부 4팀 풀리그) '리그'로 표시
+  const groupLabel = (g: string | null) => (groups.length === 1 ? '리그' : `${g}조`);
   const standings: Record<string, Standings> = Object.fromEntries(
     groups.map((g) => [
       g,
@@ -125,9 +127,14 @@ export async function loadDivision(division: Division) {
   };
   const final = winner(views.find((v) => v.match.stage === 'final'));
   const third = winner(views.find((v) => v.match.stage === 'third'));
-  const podium = final && third ? [final.win, final.lose, third.win] : null;
+  let podium = final && third ? [final.win, final.lose, third.win] : null;
+  // 토너먼트가 없는 단일 리그: 리그가 끝나고 1~3위가 동률이 아니면 리그 순위가 최종 순위
+  const league = groups.length === 1 ? standings[groups[0]] : null;
+  if (!views.some((v) => v.match.stage !== 'group') && league?.complete && league.rows.slice(0, 3).every((r) => !r.tied)) {
+    podium = league.rows.slice(0, 3).map((r) => slotLabel(r.slot));
+  }
 
-  return { division, groups, standings, views, podium, teamName, playerName, slotLabel, goals, cards, players, slots, teams };
+  return { division, groups, groupLabel, standings, views, podium, teamName, playerName, slotLabel, goals, cards, players, slots, teams };
 }
 
 export async function matchDivision(id: number) {
