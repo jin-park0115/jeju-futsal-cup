@@ -127,7 +127,7 @@ export async function loadDivision(division: Division) {
   const third = winner(views.find((v) => v.match.stage === 'third'));
   const podium = final && third ? [final.win, final.lose, third.win] : null;
 
-  return { division, groups, standings, views, podium, teamName, playerName, slotLabel, goals };
+  return { division, groups, standings, views, podium, teamName, playerName, slotLabel, goals, cards, players, slots, teams };
 }
 
 export async function matchDivision(id: number) {
