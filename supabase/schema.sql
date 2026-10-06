@@ -31,14 +31,12 @@ create table matches (
   "group" text,
   court int not null,
   start_time time not null,
+  started_at timestamptz,
   home_slot_id bigint references slots,
   away_slot_id bigint references slots,
   home_source text,
   away_source text,
-  home_score int,
-  away_score int,
-  home_et int,
-  away_et int,
+  -- 스코어는 goals에서 계산. 토너먼트 동점이면 바로 승부차기
   home_pk int,
   away_pk int,
   status text not null default 'scheduled' check (status in ('scheduled', 'live', 'finished')),
@@ -46,11 +44,25 @@ create table matches (
   manual_away_team_id bigint references teams
 );
 
+-- scoring_team_id: 점수가 올라간 팀. 자책골이면 player_id는 상대 팀 선수
+create table goals (
+  id bigint generated always as identity primary key,
+  match_id bigint not null references matches on delete cascade,
+  player_id bigint not null references players on delete cascade,
+  scoring_team_id bigint not null references teams,
+  own_goal boolean not null default false,
+  minute int,
+  created_at timestamptz not null default now()
+);
+
+-- second_yellow: 한 경기 두 번째 경고(경고누적 퇴장)
 create table cards (
   id bigint generated always as identity primary key,
   match_id bigint not null references matches on delete cascade,
   player_id bigint not null references players on delete cascade,
-  type text not null check (type in ('yellow', 'red'))
+  type text not null check (type in ('yellow', 'second_yellow', 'red')),
+  minute int,
+  created_at timestamptz not null default now()
 );
 
 -- anon은 읽기만. 쓰기 정책이 없으므로 쓰기는 service role(RLS 우회)만 가능
@@ -58,13 +70,15 @@ alter table teams enable row level security;
 alter table players enable row level security;
 alter table slots enable row level security;
 alter table matches enable row level security;
+alter table goals enable row level security;
 alter table cards enable row level security;
 
 create policy "public read" on teams for select using (true);
 create policy "public read" on players for select using (true);
 create policy "public read" on slots for select using (true);
 create policy "public read" on matches for select using (true);
+create policy "public read" on goals for select using (true);
 create policy "public read" on cards for select using (true);
 
 -- 5단계 Realtime 구독용
-alter publication supabase_realtime add table matches, cards, slots;
+alter publication supabase_realtime add table matches, goals, cards, slots;
