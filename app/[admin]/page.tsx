@@ -7,6 +7,7 @@ export default async function AdminHome({ params }: PageProps<'/[admin]'>) {
     ['draw', '🎲 추첨 배정'],
     ...COURTS.map((n) => [`court/${n}`, `${n}구장 입력`]),
     ['bracket', '🏆 토너먼트 대진'],
+    ['teams', '👥 팀·선수 관리'],
   ];
   return (
     <div className="grid gap-2 pt-2">

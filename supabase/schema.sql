@@ -23,11 +23,12 @@ create table slots (
   unique (division, number)
 );
 
--- 조별 경기는 *_slot_id, 토너먼트는 *_source('A:1' = A조 1위) 사용
+-- 조별 경기는 *_slot_id, 토너먼트는 *_source('A:1' = A조 1위, 'W:SF1' = SF1 승자, 'L:SF1' = SF1 패자) 사용
 create table matches (
   id bigint generated always as identity primary key,
   division text not null check (division in ('middle', 'high')),
-  stage text not null check (stage in ('group', 'third', 'final')),
+  stage text not null check (stage in ('group', 'semi', 'third', 'final')),
+  code text, -- 토너먼트 경기 코드(SF1 등). 다른 경기가 W:SF1/L:SF1로 참조
   "group" text,
   court int not null,
   start_time time not null,

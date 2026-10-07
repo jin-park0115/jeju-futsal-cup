@@ -1,10 +1,10 @@
-import { loadDivision, parseDivision } from '@/lib/data.ts';
+import { loadDivision, parseDivision, stageLabel } from '@/lib/data.ts';
 import { Header, MatchCard, StandingsTable } from './ui.tsx';
 
 export default async function Home({ searchParams }: PageProps<'/'>) {
   const d = await loadDivision(parseDivision((await searchParams).d));
-  // 결승 먼저. 토너먼트가 없는 부문(중등부 4팀 리그)은 비어 있다
-  const knockout = (['final', 'third'] as const).flatMap((stage) => d.views.filter((v) => v.match.stage === stage));
+  // 4강 → 결승 → 3·4위전 순. 토너먼트가 없는 부문(중등부 4팀 리그)은 비어 있다
+  const knockout = (['semi', 'final', 'third'] as const).flatMap((stage) => d.views.filter((v) => v.match.stage === stage));
 
   return (
     <>
@@ -42,7 +42,7 @@ export default async function Home({ searchParams }: PageProps<'/'>) {
           <h2 className="mb-2 text-lg font-bold">토너먼트</h2>
           <div className="space-y-2">
             {knockout.map((v) => (
-              <MatchCard key={v.match.id} v={v} playerName={d.playerName} title={v.match.stage === 'final' ? '결승' : '3·4위전'} />
+              <MatchCard key={v.match.id} v={v} playerName={d.playerName} title={stageLabel(v.match)} />
             ))}
           </div>
         </section>

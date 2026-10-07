@@ -15,12 +15,9 @@ const rosterCol = Object.keys(rows[0]).find((k) => k.includes('선수 명단'))!
 type Team = { division: 'middle' | 'high'; name: string; players: string[] };
 const teams: Team[] = [];
 for (const row of rows) {
-  const name = String(row['팀 이름'] ?? '').trim();
+  // 대기팀도 정식 참가. 이름의 "(대기팀)" 표시는 뗀다
+  const name = String(row['팀 이름'] ?? '').replace(/\s*\(대기팀\)\s*/, '').trim();
   if (!name) continue;
-  if (name.includes('대기')) {
-    console.log(`건너뜀(대기팀): ${name}`);
-    continue;
-  }
   const lines = String(row[rosterCol] ?? '').split('\n');
   // 줄 형식이 팀마다 달라서("이름/나이/학교/..." 또는 "이름 나이 학교 ...") 첫 단어만 이름으로 쓴다. 전화번호 줄은 걸러진다
   const players = lines.map((l) => l.trim().split(/[\s/]/)[0]).filter((p) => /^[가-힣]{2,5}$/.test(p));

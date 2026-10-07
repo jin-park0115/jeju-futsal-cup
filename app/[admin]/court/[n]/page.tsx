@@ -1,10 +1,9 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { COURTS, loadDivision, DIVISION_LABEL } from '@/lib/data.ts';
+import { COURTS, loadDivision, DIVISION_LABEL, stageLabel } from '@/lib/data.ts';
 import { suspendedPlayers } from '@/lib/standings.ts';
 import { CourtPanel, type Event } from './panel.tsx';
 
-const STAGE = { group: '조별', third: '3·4위전', final: '결승' } as const;
 const STATUS = { scheduled: '예정', live: '진행중', finished: '종료' } as const;
 const CARD = { yellow: '🟨 경고', second_yellow: '🟨🟥 경고누적 퇴장', red: '🟥 퇴장' } as const;
 
@@ -34,7 +33,7 @@ export default async function CourtPage({ params, searchParams }: PageProps<'/[a
           >
             <span className="text-slate-500">{v.match.start_time.slice(0, 5)}</span>
             <span className="min-w-0 flex-1 truncate">
-              {DIVISION_LABEL[d.division]} {v.match.stage === 'group' ? d.groupLabel(v.match.group) : STAGE[v.match.stage]} · {v.homeLabel} vs {v.awayLabel}
+              {DIVISION_LABEL[d.division]} {v.match.stage === 'group' ? d.groupLabel(v.match.group) : stageLabel(v.match)} · {v.homeLabel} vs {v.awayLabel}
             </span>
             <span className="text-slate-500">
               {v.score ? `${v.score[0]}:${v.score[1]} ` : ''}
@@ -81,7 +80,7 @@ export default async function CourtPage({ params, searchParams }: PageProps<'/[a
       <CourtPanel
         key={v.match.id}
         adminKey={admin}
-        title={`${court}구장 · ${v.match.start_time.slice(0, 5)} · ${DIVISION_LABEL[d.division]} ${v.match.stage === 'group' ? d.groupLabel(v.match.group) : STAGE[v.match.stage]}`}
+        title={`${court}구장 · ${v.match.start_time.slice(0, 5)} · ${DIVISION_LABEL[d.division]} ${v.match.stage === 'group' ? d.groupLabel(v.match.group) : stageLabel(v.match)}`}
         match={{ id: v.match.id, status: v.match.status, knockout: v.match.stage !== 'group', home_pk: v.match.home_pk, away_pk: v.match.away_pk }}
         home={{ team: v.home, label: v.homeLabel, players: roster(v.home) }}
         away={{ team: v.away, label: v.awayLabel, players: roster(v.away) }}

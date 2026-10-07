@@ -1,11 +1,12 @@
-# 이어서 할 일 (2026-10-06 기준)
+# 이어서 할 일 (2026-10-07 기준)
 
 ## 지금 상태
 - 1~5단계 완료: DB, 순위 로직, 공개 페이지, 운영진 페이지, Realtime·Vercel 배포
 - 배포 주소: https://jeju-futsal-cup.vercel.app (main에 push하면 자동 재배포)
-- DB는 비어 있는 대회 전 상태: 팀 10·선수 58·시간표 14경기만 있고, 추첨 배정·결과는 없음
-- 중등부는 4팀 단일 리그(토너먼트 없음)로 들어가 있음
-- 시간표는 3구장 포스터 기준(10:15 / 10:45 / 11:15 / 11:45, 토너먼트 13:00·13:30)
+- DB는 비어 있는 대회 전 상태: 팀·선수·시간표만 있고, 추첨 배정·결과는 없음
+- 고등부 8팀(4팀씩 2개 조 → 4강 → 결승·3·4위전). 8번째는 "고등 미정팀"(이름·선수는 /teams에서 입력)
+- 중등부는 4팀 단일 리그(토너먼트 없음)
+- 시간표는 4구장 포스터 기준(10:15 / 10:45 / 11:15 / 11:45, 13:00 4강·중등, 13:30 결승·3·4위전)
 
 ## 다른 PC에서 이어갈 때
 1. `git clone https://github.com/jin-park0115/jeju-futsal-cup.git` → `npm install`
@@ -21,8 +22,8 @@
   - Supabase → Project Settings → General에서 지역 확인
   - Vercel → Settings → Functions → Function Region을 같은 곳으로(서울 `icn1`, 도쿄 `hnd1`) → Redeploy
 - [ ] **6단계 리허설 준비** (Claude에게 요청): `docs/REHEARSAL.md` 체크리스트 작성
-  - 추첨 → 3구장 동시 입력(득점·자책골·카드·경고 2장·삭제·분 수정) → 종료 후 수정
-    → 고등부 토너먼트(직접 지정·승부차기) → 공개 화면 자동 갱신·최종 순위
+  - 추첨 → 4구장 동시 입력(득점·자책골·카드·경고 2장·삭제·분 수정) → 종료 후 수정
+    → 고등부 4강·결승·3·4위전(직접 지정·승부차기) → 공개 화면 자동 갱신·최종 순위
   - 단계별 "기대 결과"를 적어 이상한 점을 바로 알 수 있게
 - [ ] **리허설 실행**: 운영진이 실제 폰으로. 느리거나 헷갈린 점·버그를 모아서 수정 요청
 - [ ] **리허설 후 초기화**: `node --env-file=.env.local scripts/fake-data.mts --reset`
@@ -34,7 +35,8 @@
   - 미리보기: `node scripts/import-teams.mts data/<파일>.xlsx`
   - 저장: `node --env-file=.env.local scripts/import-teams.mts data/<파일>.xlsx --write`
 - [ ] `ADMIN_PATH`를 새 값으로 바꾸고 Redeploy (리허설 때 퍼진 링크 무효화)
-- [ ] 구장 담당자 3명에게 각자 링크 전달: `https://jeju-futsal-cup.vercel.app/{ADMIN_PATH}/court/1` ~ `/court/3`
+- [ ] 고등 미정팀 이름·선수 입력(`/{ADMIN_PATH}/teams`) 또는 당일 구장 화면에서 "+ 선수 추가"
+- [ ] 구장 담당자 4명에게 각자 링크 전달: `https://jeju-futsal-cup.vercel.app/{ADMIN_PATH}/court/1` ~ `/court/4`
 - [ ] 추첨 담당: `/{ADMIN_PATH}/draw`, 대진 확인: `/{ADMIN_PATH}/bracket`
 
 ## 자주 쓰는 명령

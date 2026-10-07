@@ -3,10 +3,12 @@ import { connection } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import {
   computeStandings,
+  decide,
   matchScore,
   resolveSource,
   sourceLabel,
   type Card,
+  type Decided,
   type Goal,
   type Match,
   type Player,
@@ -16,9 +18,15 @@ import {
 
 export type Division = 'middle' | 'high';
 // 대회 구장 번호. 구장 수가 바뀌면 여기와 시간표 SQL만 바꾼다
-export const COURTS = [1, 2, 3];
+export const COURTS = [1, 2, 3, 4];
 export const DIVISION_LABEL: Record<Division, string> = { high: '고등부', middle: '중등부' };
 const SLOT_PREFIX: Record<Division, string> = { high: '고등', middle: '중등' };
+
+/** 토너먼트 경기 이름: '4강1', '3·4위전', '결승' */
+export function stageLabel(m: { stage: string; code: string | null }) {
+  if (m.stage === 'semi') return m.code?.replace('SF', '4강') ?? '4강';
+  return m.stage === 'final' ? '결승' : '3·4위전';
+}
 
 export type MatchRow = Match & {
   court: number;
@@ -29,6 +37,7 @@ export type MatchRow = Match & {
   away_pk: number | null;
   manual_home_team_id: number | null;
   manual_away_team_id: number | null;
+  code: string | null;
 };
 export type GoalRow = Goal & { id: number; minute: number | null; created_at: string };
 export type CardRow = Card & { id: number; minute: number | null; created_at: string };
@@ -89,13 +98,19 @@ export async function loadDivision(division: Division) {
     ]),
   );
 
-  const slotLabel = (s: Slot) => (s.team_id ? teamName.get(s.team_id)! : `${SLOT_PREFIX[division]}${s.number}`);
+  // 슬롯 이름: 조가 여럿이면 '고등A1'(조 + 조 안 순번), 하나면 '중등1'
+  const firstInGroup = new Map(groups.map((g) => [g, Math.min(...slots.filter((s) => s.group === g).map((s) => s.number))]));
+  const slotName = (s: Slot) =>
+    `${SLOT_PREFIX[division]}${groups.length > 1 ? `${s.group}${s.number - firstInGroup.get(s.group)! + 1}` : s.number}`;
+  const slotLabel = (s: Slot) => (s.team_id ? teamName.get(s.team_id)! : slotName(s));
+  // 끝난 토너먼트 경기(code 있는 것)의 승패. 시간순으로 채워져 결승·3·4위전이 4강 결과를 참조한다
+  const decided: Decided = {};
   const side = (slotId: number | null, source: string | null, manual: number | null) => {
     if (slotId !== null) {
       const s = slotById.get(slotId)!;
       return { team: s.team_id, label: slotLabel(s) };
     }
-    const team = resolveSource(source!, manual, standings);
+    const team = resolveSource(source!, manual, standings, decided);
     return { team, label: team ? teamName.get(team)! : sourceLabel(source!) };
   };
 
@@ -105,13 +120,18 @@ export async function loadDivision(division: Division) {
   const views: MatchView[] = matches.map((m) => {
     const h = side(m.home_slot_id, m.home_source, m.manual_home_team_id);
     const a = side(m.away_slot_id, m.away_source, m.manual_away_team_id);
+    const score = m.status === 'scheduled' ? null : matchScore(m.id, h.team, a.team, goals);
+    if (m.code && m.status === 'finished' && score) {
+      const r = decide(h.team, a.team, score, m.home_pk, m.away_pk);
+      if (r) decided[m.code] = r;
+    }
     return {
       match: m,
       home: h.team,
       away: a.team,
       homeLabel: h.label,
       awayLabel: a.label,
-      score: m.status === 'scheduled' ? null : matchScore(m.id, h.team, a.team, goals),
+      score,
       goals: goals.filter((g) => g.match_id === m.id).sort(byTime),
       cards: cards
         .filter((x) => x.match_id === m.id)
@@ -123,9 +143,8 @@ export async function loadDivision(division: Division) {
   // 최종 순위: 결승 승/패 = 1·2위, 3·4위전 승자 = 3위
   const winner = (v?: MatchView) => {
     if (!v || v.match.status !== 'finished' || !v.score) return null;
-    const [hs, as] = v.score;
-    const homeWins = hs !== as ? hs > as : (v.match.home_pk ?? 0) > (v.match.away_pk ?? 0);
-    return homeWins ? { win: v.homeLabel, lose: v.awayLabel } : { win: v.awayLabel, lose: v.homeLabel };
+    const r = decide(v.home, v.away, v.score, v.match.home_pk, v.match.away_pk);
+    return r && { win: teamName.get(r.win)!, lose: teamName.get(r.lose)! };
   };
   const final = winner(views.find((v) => v.match.stage === 'final'));
   const third = winner(views.find((v) => v.match.stage === 'third'));
@@ -136,7 +155,7 @@ export async function loadDivision(division: Division) {
     podium = league.rows.slice(0, 3).map((r) => slotLabel(r.slot));
   }
 
-  return { division, groups, groupLabel, standings, views, podium, teamName, playerName, slotLabel, goals, cards, players, slots, teams };
+  return { division, groups, groupLabel, standings, decided, views, podium, teamName, playerName, slotName, slotLabel, goals, cards, players, slots, teams };
 }
 
 export async function matchDivision(id: number) {

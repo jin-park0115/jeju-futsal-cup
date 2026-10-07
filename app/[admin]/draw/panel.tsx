@@ -28,9 +28,7 @@ export function DrawPanel({ adminKey, division, slots, teams }: Props) {
       <ul className="divide-y divide-slate-100">
         {slots.map((s) => (
           <li key={s.id} className="flex items-center gap-3 py-2">
-            <span className="w-20 shrink-0 font-semibold">
-              {s.label} <span className="text-xs text-slate-400">{s.group}조</span>
-            </span>
+            <span className="w-20 shrink-0 font-semibold">{s.label}</span>
             <select
               className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-2 py-2"
               value={s.team_id ?? ''}

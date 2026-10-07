@@ -12,7 +12,7 @@ export default async function DrawPage({ params }: PageProps<'/[admin]/draw'>) {
           <DrawPanel
             adminKey={admin}
             division={d.division}
-            slots={d.slots.map((s) => ({ id: s.id, group: s.group, label: `${d.division === 'high' ? '고등' : '중등'}${s.number}`, team_id: s.team_id }))}
+            slots={d.slots.map((s) => ({ id: s.id, group: s.group, label: d.slotName(s), team_id: s.team_id }))}
             teams={d.teams.sort((a, b) => a.name.localeCompare(b.name, 'ko'))}
           />
         </section>

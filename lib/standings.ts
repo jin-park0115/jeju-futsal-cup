@@ -4,7 +4,7 @@ export type Slot = { id: number; number: number; group: string; team_id: number 
 export type Player = { id: number; team_id: number };
 export type Match = {
   id: number;
-  stage: 'group' | 'third' | 'final';
+  stage: 'group' | 'semi' | 'third' | 'final';
   group: string | null;
   start_time: string;
   status: 'scheduled' | 'live' | 'finished';
@@ -137,16 +137,35 @@ export function computeStandings(
   return { rows: ordered, complete: matches.every((m) => m.status === 'finished') };
 }
 
-/** 'A:1' → 'A조 1위' */
+/** 'A:1' → 'A조 1위', 'W:SF1' → '4강1 승자', 'L:SF2' → '4강2 패자' */
 export function sourceLabel(source: string) {
-  const [group, rank] = source.split(':');
-  return `${group}조 ${rank}위`;
+  const [a, b] = source.split(':');
+  if (a === 'W' || a === 'L') return `${b.replace('SF', '4강')} ${a === 'W' ? '승자' : '패자'}`;
+  return `${a}조 ${b}위`;
 }
 
-/** 진출 규칙 → team_id. 수동 지정 우선, 조 경기가 다 끝나고 동률이 아닐 때만 확정, 아니면 null */
-export function resolveSource(source: string, manualTeamId: number | null, standings: Record<string, Standings>) {
+/** 끝난 토너먼트 경기의 승자·패자. 동점이면 승부차기로 가린다. 아직 못 가리면 null */
+export function decide(home: number | null, away: number | null, score: number[], homePk: number | null, awayPk: number | null) {
+  if (home === null || away === null) return null;
+  const [hs, as] = score;
+  const homeWins = hs !== as ? hs > as : homePk !== null && awayPk !== null && homePk !== awayPk ? homePk > awayPk : null;
+  if (homeWins === null) return null;
+  return homeWins ? { win: home, lose: away } : { win: away, lose: home };
+}
+export type Decided = Record<string, { win: number; lose: number }>;
+
+/**
+ * 진출 규칙 → team_id. 수동 지정 우선, 아니면 null(미확정)
+ * - 'A:1': 조 경기가 다 끝나고 동률이 아닐 때만 확정
+ * - 'W:SF1' / 'L:SF1': 코드 SF1 경기가 끝나 승패가 갈렸을 때만 확정(decided에 있을 때)
+ */
+export function resolveSource(source: string, manualTeamId: number | null, standings: Record<string, Standings>, decided: Decided = {}) {
   if (manualTeamId !== null) return manualTeamId;
   const [group, rank] = source.split(':');
+  if (group === 'W' || group === 'L') {
+    const r = decided[rank];
+    return r ? (group === 'W' ? r.win : r.lose) : null;
+  }
   const s = standings[group];
   if (!s?.complete) return null;
   const row = s.rows.find((r) => r.rank === Number(rank));

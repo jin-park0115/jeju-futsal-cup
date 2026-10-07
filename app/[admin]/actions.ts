@@ -116,3 +116,49 @@ export async function setManualTeam(key: string, matchId: number, side: 'home' |
   await run(db.from('matches').update({ [col]: teamId === null ? null : id(teamId) }).eq('id', id(matchId)));
   refresh();
 }
+
+// ── 팀·선수 관리 ──
+const cleanName = (x: unknown) => {
+  const s = String(x ?? '').trim();
+  if (!s || s.length > 30) throw new Error('Bad name');
+  return s;
+};
+
+export async function addTeam(key: string, division: 'middle' | 'high', name: string) {
+  const db = admin(key);
+  if (division !== 'middle' && division !== 'high') throw new Error('Bad division');
+  const { error } = await db.from('teams').insert({ division, name: cleanName(name) });
+  if (error) return error.code === '23505' ? '같은 이름의 팀이 이미 있습니다' : '저장 실패';
+  refresh();
+}
+
+export async function renameTeam(key: string, teamId: number, name: string) {
+  const db = admin(key);
+  const { error } = await db.from('teams').update({ name: cleanName(name) }).eq('id', id(teamId));
+  if (error) return error.code === '23505' ? '같은 이름의 팀이 이미 있습니다' : '저장 실패';
+  refresh();
+}
+
+export async function addPlayer(key: string, teamId: number, name: string) {
+  const db = admin(key);
+  await run(db.from('players').insert({ team_id: id(teamId), name: cleanName(name) }));
+  refresh();
+}
+
+export async function renamePlayer(key: string, playerId: number, name: string) {
+  const db = admin(key);
+  await run(db.from('players').update({ name: cleanName(name) }).eq('id', id(playerId)));
+  refresh();
+}
+
+/** 득점·카드 기록이 있는 선수는 지우지 않는다(지우면 기록도 함께 사라짐) */
+export async function deletePlayer(key: string, playerId: number) {
+  const db = admin(key);
+  const [g, c] = await Promise.all([
+    db.from('goals').select('id', { count: 'exact', head: true }).eq('player_id', id(playerId)),
+    db.from('cards').select('id', { count: 'exact', head: true }).eq('player_id', playerId),
+  ]);
+  if (g.count || c.count) return '득점·카드 기록이 있는 선수는 삭제할 수 없습니다. 이름을 고쳐 주세요';
+  await run(db.from('players').delete().eq('id', playerId));
+  refresh();
+}

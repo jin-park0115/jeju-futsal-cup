@@ -1,6 +1,16 @@
--- schema.sql 다음에 실행. 슬롯 team_id는 비워두고 당일 추첨으로 배정한다.
--- 고등부 8팀: 4팀씩 2개 조 풀리그 → 4강(A1 vs B2, B1 vs A2) → 결승(4강 승자)·3·4위전(4강 패자). 4구장 시간표.
--- 중등부는 팀 수에 맞는 supabase/middle/{4,5,6}.sql을 이어서 실행한다(현재 4팀).
+-- 고등부 8팀(4팀씩 2개 조) + 4강, 4구장 시간표. 기존 DB에 SQL Editor로 1회 실행한 뒤 supabase/middle/4.sql도 실행한다
+-- ⚠ 고등부 경기 기록과 추첨 배정이 모두 지워진다. 대회 시작 전에만 실행
+
+-- 4강 단계와 경기 코드(W:SF1 = SF1 승자, L:SF1 = SF1 패자 로 참조)
+alter table matches drop constraint matches_stage_check;
+alter table matches add constraint matches_stage_check check (stage in ('group', 'semi', 'third', 'final'));
+alter table matches add column code text;
+
+-- 시트를 내지 않은 8번째 팀. 이름·선수는 운영진 /teams 페이지에서 나중에 입력
+insert into teams (division, name) values ('high', '고등 미정팀') on conflict do nothing;
+
+delete from matches where division = 'high';
+delete from slots where division = 'high';
 
 insert into slots (division, number, "group")
 select 'high', n, case when n <= 4 then 'A' else 'B' end from generate_series(1, 8) n;

@@ -1,6 +1,6 @@
 'use client';
 import { useState, useTransition } from 'react';
-import { addCard, addGoal, deleteEvent, finishMatch, setEventMinute, startMatch } from '../../actions.ts';
+import { addCard, addGoal, addPlayer, deleteEvent, finishMatch, setEventMinute, startMatch } from '../../actions.ts';
 
 type Player = { id: number; name: string; suspended: boolean };
 type Side = { team: number | null; label: string; players: Player[] };
@@ -22,17 +22,22 @@ export function CourtPanel({ adminKey: key, title, match, home, away, score, eve
   const [pending, start] = useTransition();
   const [step, setStep] = useState<Step>(null);
   const [pk, setPk] = useState([match.home_pk?.toString() ?? '', match.away_pk?.toString() ?? '']);
-  const act = (fn: () => Promise<void>) =>
+  // keepStep: 선수 추가처럼 입력 단계를 유지해야 하는 경우
+  const act = (fn: () => Promise<void>, keepStep = false) =>
     start(async () => {
       try {
         await fn();
-        setStep(null);
+        if (!keepStep) setStep(null);
       } catch (e) {
         alert(`저장 실패: ${e instanceof Error ? e.message : e}`);
       }
     });
 
   const sides = { home, away };
+  const newPlayer = (team: number | null) => {
+    const name = team && prompt('추가할 선수 이름')?.trim();
+    if (name) act(() => addPlayer(key, team, name), true);
+  };
   const tied = score[0] === score[1];
   const needPk = match.knockout && tied;
   const pkValid = !needPk || (pk.every((x) => /^\d+$/.test(x)) && pk[0] !== pk[1]);
@@ -98,11 +103,12 @@ export function CourtPanel({ adminKey: key, title, match, home, away, score, eve
                   scorer={sides[step.side]}
                   opponent={sides[step.side === 'home' ? 'away' : 'home']}
                   onPick={(p, own) => act(() => addGoal(key, match.id, p.id, sides[step.side!].team!, own))}
+                  onAdd={newPlayer}
                 />
               )}
 
               {step.side && step.kind === 'card' && !step.player && (
-                <PlayerGrid players={sides[step.side].players} onPick={(p) => setStep({ ...step, player: p })} />
+                <PlayerGrid players={sides[step.side].players} onPick={(p) => setStep({ ...step, player: p })} onAdd={() => newPlayer(sides[step.side!].team)} />
               )}
 
               {step.player && (
@@ -189,7 +195,7 @@ export function CourtPanel({ adminKey: key, title, match, home, away, score, eve
   );
 }
 
-function PlayerGrid({ players, onPick, tone = 'bg-slate-100' }: { players: Player[]; onPick: (p: Player) => void; tone?: string }) {
+function PlayerGrid({ players, onPick, onAdd, tone = 'bg-slate-100' }: { players: Player[]; onPick: (p: Player) => void; onAdd: () => void; tone?: string }) {
   return (
     <div className="grid grid-cols-2 gap-2">
       {players.map((p) => (
@@ -198,19 +204,22 @@ function PlayerGrid({ players, onPick, tone = 'bg-slate-100' }: { players: Playe
           {p.suspended && <span className="block text-xs font-normal text-red-600">출장정지</span>}
         </button>
       ))}
+      <button className="rounded-lg border-2 border-dashed border-slate-300 px-2 py-3 text-slate-500" onClick={onAdd}>
+        + 선수 추가
+      </button>
     </div>
   );
 }
 
-function GoalPicker({ scorer, opponent, onPick }: { scorer: Side; opponent: Side; onPick: (p: Player, own: boolean) => void }) {
+function GoalPicker({ scorer, opponent, onPick, onAdd }: { scorer: Side; opponent: Side; onPick: (p: Player, own: boolean) => void; onAdd: (team: number | null) => void }) {
   const [own, setOwn] = useState(false);
   return (
     <>
-      <PlayerGrid players={scorer.players} onPick={(p) => onPick(p, false)} />
+      <PlayerGrid players={scorer.players} onPick={(p) => onPick(p, false)} onAdd={() => onAdd(scorer.team)} />
       <button className="mt-3 w-full py-2 text-sm text-slate-500 underline" onClick={() => setOwn(!own)}>
         {own ? '자책골 닫기' : `상대(${opponent.label}) 자책골`}
       </button>
-      {own && <PlayerGrid players={opponent.players} tone="bg-orange-100" onPick={(p) => onPick(p, true)} />}
+      {own && <PlayerGrid players={opponent.players} tone="bg-orange-100" onPick={(p) => onPick(p, true)} onAdd={() => onAdd(opponent.team)} />}
     </>
   );
 }

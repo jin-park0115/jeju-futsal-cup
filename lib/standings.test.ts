@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   computeStandings,
+  decide,
   resolveSource,
   sourceLabel,
   suspendedPlayers,
@@ -124,4 +125,19 @@ test('4팀 단일 리그: 6경기 후 1~4위, A:3·A:4도 해석', () => {
   assert.deepEqual(s.rows.map((r) => r.points), [9, 6, 3, 0]);
   assert.equal(resolveSource('A:3', null, { A: s }), 103);
   assert.equal(resolveSource('A:4', null, { A: s }), 104);
+});
+
+test('4강 승자·패자 진출, 동점은 승부차기', () => {
+  assert.deepEqual(decide(1, 2, [2, 1], null, null), { win: 1, lose: 2 });
+  assert.deepEqual(decide(1, 2, [1, 1], 3, 4), { win: 2, lose: 1 });
+  assert.equal(decide(1, 2, [1, 1], null, null), null); // 승부차기 미입력
+  assert.equal(decide(null, 2, [1, 0], null, null), null);
+
+  const decided = { SF1: { win: 11, lose: 12 } };
+  assert.equal(resolveSource('W:SF1', null, {}, decided), 11);
+  assert.equal(resolveSource('L:SF1', null, {}, decided), 12);
+  assert.equal(resolveSource('W:SF2', null, {}, decided), null); // SF2 아직
+  assert.equal(resolveSource('W:SF2', 7, {}, decided), 7); // 수동 지정 우선
+  assert.equal(sourceLabel('W:SF1'), '4강1 승자');
+  assert.equal(sourceLabel('L:SF2'), '4강2 패자');
 });

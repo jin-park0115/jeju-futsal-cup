@@ -21,6 +21,9 @@ export default async function AdminLayout({ children, params }: LayoutProps<'/[a
         <Link href={`/${admin}/bracket`} className="rounded px-2 py-1 hover:bg-slate-700">
           대진
         </Link>
+        <Link href={`/${admin}/teams`} className="rounded px-2 py-1 hover:bg-slate-700">
+          팀
+        </Link>
         <Link href="/" className="ml-auto rounded px-2 py-1 text-slate-400">
           공개화면
         </Link>

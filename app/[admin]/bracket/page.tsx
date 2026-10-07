@@ -1,9 +1,8 @@
-import { DIVISION_LABEL, loadDivision } from '@/lib/data.ts';
+import { DIVISION_LABEL, loadDivision, stageLabel } from '@/lib/data.ts';
 import { resolveSource, sourceLabel } from '@/lib/standings.ts';
 import { StandingsTable } from '../../ui.tsx';
 import { ManualSelect } from './select.tsx';
 
-const STAGE = { third: '3·4위전', final: '결승' } as const;
 
 export default async function BracketPage({ params }: PageProps<'/[admin]/bracket'>) {
   const { admin } = await params;
@@ -35,11 +34,11 @@ export default async function BracketPage({ params }: PageProps<'/[admin]/bracke
               return (
                 <div key={m.id} className="mt-3 rounded-xl bg-white p-3 shadow-sm">
                   <p className="mb-2 font-semibold">
-                    {STAGE[m.stage as 'third' | 'final']} <span className="text-sm font-normal text-slate-500">{m.start_time.slice(0, 5)} · {m.court}구장</span>
+                    {stageLabel(m)} <span className="text-sm font-normal text-slate-500">{m.start_time.slice(0, 5)} · {m.court}구장</span>
                     {m.status !== 'scheduled' && <span className="ml-1 text-xs text-amber-700">(시작됨: 대진 고정)</span>}
                   </p>
                   {sides.map((s) => {
-                    const auto = resolveSource(s.source, null, d.standings);
+                    const auto = resolveSource(s.source, null, d.standings, d.decided);
                     return (
                       <div key={s.side} className="flex items-center gap-2 py-1 text-sm">
                         <span className="w-16 shrink-0 text-slate-500">{sourceLabel(s.source)}</span>
