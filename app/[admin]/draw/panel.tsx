@@ -13,6 +13,15 @@ export function DrawPanel({ adminKey, division, slots, teams }: Props) {
   const [pending, start] = useTransition();
   const used = new Set(slots.map((s) => s.team_id));
   const empty = slots.filter((s) => s.team_id === null).length;
+  const draw = (all: boolean) =>
+    start(async () => {
+      try {
+        const msg = await randomDraw(adminKey, division, all);
+        if (msg) alert(msg);
+      } catch (e) {
+        alert(e instanceof Error ? e.message : String(e));
+      }
+    });
 
   return (
     <div className={`rounded-xl bg-white p-3 shadow-sm ${pending ? 'opacity-60' : ''}`}>
@@ -38,15 +47,22 @@ export function DrawPanel({ adminKey, division, slots, teams }: Props) {
           </li>
         ))}
       </ul>
-      <button
-        className="mt-3 w-full rounded-lg bg-slate-900 py-3 font-semibold text-white disabled:opacity-40"
-        disabled={pending || empty === 0}
-        onClick={() => {
-          if (confirm(`빈 슬롯 ${empty}개에 남은 팀을 무작위로 배정할까요?`)) start(() => randomDraw(adminKey, division));
-        }}
-      >
-        🎲 빈 슬롯 랜덤 배정
-      </button>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <button
+          className="rounded-lg bg-slate-900 py-3 font-semibold text-white disabled:opacity-40"
+          disabled={pending || empty === 0}
+          onClick={() => confirm(`빈 슬롯 ${empty}개에 남은 팀을 무작위로 배정할까요?`) && draw(false)}
+        >
+          🎲 빈 슬롯 채우기
+        </button>
+        <button
+          className="rounded-lg border border-slate-900 py-3 font-semibold disabled:opacity-40"
+          disabled={pending}
+          onClick={() => confirm('현재 배정을 모두 지우고 처음부터 다시 뽑을까요?') && draw(true)}
+        >
+          🔄 전체 다시 뽑기
+        </button>
+      </div>
     </div>
   );
 }

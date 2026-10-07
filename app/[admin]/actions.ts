@@ -26,8 +26,15 @@ export async function assignSlot(key: string, slotId: number, teamId: number | n
   refresh();
 }
 
-export async function randomDraw(key: string, division: 'middle' | 'high') {
+/** 빈 슬롯에 남은 팀을 무작위 배정. all이면 전부 비우고 다시 뽑는다(경기가 하나라도 시작됐으면 거부) */
+export async function randomDraw(key: string, division: 'middle' | 'high', all = false) {
   const db = admin(key);
+  if (all) {
+    const { count } = await db.from('matches').select('id', { count: 'exact', head: true }).eq('division', division).neq('status', 'scheduled');
+    // 운영 중 안내 문구는 throw 대신 반환(배포 환경에서 에러 메시지가 가려짐)
+    if (count) return '이미 시작한 경기가 있어 다시 뽑을 수 없습니다';
+    await run(db.from('slots').update({ team_id: null }).eq('division', division));
+  }
   const { data: slots } = await db.from('slots').select('id, team_id').eq('division', division).order('number');
   const { data: teams } = await db.from('teams').select('id').eq('division', division);
   const used = new Set(slots!.map((s) => s.team_id));
