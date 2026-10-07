@@ -15,6 +15,8 @@ import {
 } from './standings.ts';
 
 export type Division = 'middle' | 'high';
+// 대회 구장 번호. 구장 수가 바뀌면 여기와 시간표 SQL만 바꾼다
+export const COURTS = [1, 2, 3];
 export const DIVISION_LABEL: Record<Division, string> = { high: '고등부', middle: '중등부' };
 const SLOT_PREFIX: Record<Division, string> = { high: '고등', middle: '중등' };
 

@@ -5,6 +5,7 @@
 - 배포 주소: https://jeju-futsal-cup.vercel.app (main에 push하면 자동 재배포)
 - DB는 비어 있는 대회 전 상태: 팀 10·선수 58·시간표 14경기만 있고, 추첨 배정·결과는 없음
 - 중등부는 4팀 단일 리그(토너먼트 없음)로 들어가 있음
+- 시간표는 3구장 포스터 기준(10:15 / 10:45 / 11:15 / 11:45, 토너먼트 13:00·13:30)
 
 ## 다른 PC에서 이어갈 때
 1. `git clone https://github.com/jin-park0115/jeju-futsal-cup.git` → `npm install`
@@ -20,7 +21,7 @@
   - Supabase → Project Settings → General에서 지역 확인
   - Vercel → Settings → Functions → Function Region을 같은 곳으로(서울 `icn1`, 도쿄 `hnd1`) → Redeploy
 - [ ] **6단계 리허설 준비** (Claude에게 요청): `docs/REHEARSAL.md` 체크리스트 작성
-  - 추첨 → 4구장 동시 입력(득점·자책골·카드·경고 2장·삭제·분 수정) → 종료 후 수정
+  - 추첨 → 3구장 동시 입력(득점·자책골·카드·경고 2장·삭제·분 수정) → 종료 후 수정
     → 고등부 토너먼트(직접 지정·승부차기) → 공개 화면 자동 갱신·최종 순위
   - 단계별 "기대 결과"를 적어 이상한 점을 바로 알 수 있게
 - [ ] **리허설 실행**: 운영진이 실제 폰으로. 느리거나 헷갈린 점·버그를 모아서 수정 요청
@@ -33,7 +34,7 @@
   - 미리보기: `node scripts/import-teams.mts data/<파일>.xlsx`
   - 저장: `node --env-file=.env.local scripts/import-teams.mts data/<파일>.xlsx --write`
 - [ ] `ADMIN_PATH`를 새 값으로 바꾸고 Redeploy (리허설 때 퍼진 링크 무효화)
-- [ ] 구장 담당자 4명에게 각자 링크 전달: `https://jeju-futsal-cup.vercel.app/{ADMIN_PATH}/court/1` ~ `/court/4`
+- [ ] 구장 담당자 3명에게 각자 링크 전달: `https://jeju-futsal-cup.vercel.app/{ADMIN_PATH}/court/1` ~ `/court/3`
 - [ ] 추첨 담당: `/{ADMIN_PATH}/draw`, 대진 확인: `/{ADMIN_PATH}/bracket`
 
 ## 자주 쓰는 명령

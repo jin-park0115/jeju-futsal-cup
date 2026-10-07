@@ -1,5 +1,5 @@
 -- schema.sql 다음에 실행. 슬롯 team_id는 비워두고 당일 추첨으로 배정한다.
--- 고등부 6팀: 3팀씩 2개 조 풀리그(1-2, 1-3, 2-3). 원래 포스터의 B조 5vs6 중복은 4vs6으로 바로잡았다.
+-- 고등부 6팀: 3팀씩 2개 조 풀리그(1-2, 1-3, 2-3). 3구장 시간표(15분 경기 + 15분 휴식).
 -- 중등부는 팀 수에 맞는 supabase/middle/{4,5,6}.sql을 이어서 실행한다(현재 4팀).
 
 insert into slots (division, number, "group")
@@ -10,10 +10,10 @@ select 'high', 'group', m.grp, m.court, m.start_time::time, h.id, a.id
 from (values
   ('A', 1, '10:15', 1, 2),
   ('B', 2, '10:15', 4, 5),
-  ('A', 1, '11:00', 1, 3),
-  ('B', 2, '11:00', 4, 6),
-  ('A', 1, '11:30', 2, 3),
-  ('B', 2, '11:30', 5, 6)
+  ('A', 1, '10:45', 1, 3),
+  ('B', 1, '11:15', 4, 6),
+  ('A', 2, '11:15', 2, 3),
+  ('B', 1, '11:45', 5, 6)
 ) m(grp, court, start_time, home, away)
 join slots h on h.division = 'high' and h.number = m.home
 join slots a on a.division = 'high' and a.number = m.away;

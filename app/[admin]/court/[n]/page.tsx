@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { loadDivision, DIVISION_LABEL } from '@/lib/data.ts';
+import { COURTS, loadDivision, DIVISION_LABEL } from '@/lib/data.ts';
 import { suspendedPlayers } from '@/lib/standings.ts';
 import { CourtPanel, type Event } from './panel.tsx';
 
@@ -11,7 +11,7 @@ const CARD = { yellow: '🟨 경고', second_yellow: '🟨🟥 경고누적 퇴�
 export default async function CourtPage({ params, searchParams }: PageProps<'/[admin]/court/[n]'>) {
   const { admin, n } = await params;
   const court = Number(n);
-  if (![1, 2, 3, 4].includes(court)) notFound();
+  if (!COURTS.includes(court)) notFound();
   const pick = Number((await searchParams).m);
 
   const divisions = await Promise.all((['high', 'middle'] as const).map(loadDivision));

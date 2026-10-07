@@ -1,13 +1,11 @@
 import Link from 'next/link';
+import { COURTS } from '@/lib/data.ts';
 
 export default async function AdminHome({ params }: PageProps<'/[admin]'>) {
   const { admin } = await params;
   const links = [
     ['draw', '🎲 추첨 배정'],
-    ['court/1', '1구장 입력'],
-    ['court/2', '2구장 입력'],
-    ['court/3', '3구장 입력'],
-    ['court/4', '4구장 입력'],
+    ...COURTS.map((n) => [`court/${n}`, `${n}구장 입력`]),
     ['bracket', '🏆 토너먼트 대진'],
   ];
   return (

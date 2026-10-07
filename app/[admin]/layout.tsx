@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { COURTS } from '@/lib/data.ts';
 
 export const metadata = { title: '운영진 · 제주 풋살컵', robots: { index: false, follow: false } };
 
@@ -12,7 +13,7 @@ export default async function AdminLayout({ children, params }: LayoutProps<'/[a
         <Link href={`/${admin}/draw`} className="rounded px-2 py-1 hover:bg-slate-700">
           추첨
         </Link>
-        {[1, 2, 3, 4].map((n) => (
+        {COURTS.map((n) => (
           <Link key={n} href={`/${admin}/court/${n}`} className="rounded px-2 py-1 hover:bg-slate-700">
             {n}구장
           </Link>
