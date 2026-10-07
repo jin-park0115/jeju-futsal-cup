@@ -162,3 +162,19 @@ export async function deletePlayer(key: string, playerId: number) {
   await run(db.from('players').delete().eq('id', playerId));
   refresh();
 }
+
+/** 대회 기록 전체 초기화: 득점·카드·추첨 배정·경기 상태. 팀·선수·시간표는 유지. confirm은 실수 호출 방지용 */
+export async function resetAll(key: string, confirm: string) {
+  const db = admin(key);
+  if (confirm !== 'RESET') throw new Error('Bad confirm');
+  await run(db.from('goals').delete().gt('id', 0));
+  await run(db.from('cards').delete().gt('id', 0));
+  await run(
+    db
+      .from('matches')
+      .update({ status: 'scheduled', started_at: null, home_pk: null, away_pk: null, manual_home_team_id: null, manual_away_team_id: null })
+      .gt('id', 0),
+  );
+  await run(db.from('slots').update({ team_id: null }).gt('id', 0));
+  refresh();
+}

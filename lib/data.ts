@@ -166,3 +166,17 @@ export async function matchDivision(id: number) {
 export function parseDivision(d: string | string[] | undefined): Division {
   return d === 'middle' ? 'middle' : 'high';
 }
+
+/** 초기화 확인창에 보여줄 지워질 데이터 양 */
+export async function recordCounts() {
+  await connection();
+  const c = db();
+  const count = async (q: PromiseLike<{ count: number | null }>) => (await q).count ?? 0;
+  const [goals, cards, assigned, started] = await Promise.all([
+    count(c.from('goals').select('id', { count: 'exact', head: true })),
+    count(c.from('cards').select('id', { count: 'exact', head: true })),
+    count(c.from('slots').select('id', { count: 'exact', head: true }).not('team_id', 'is', null)),
+    count(c.from('matches').select('id', { count: 'exact', head: true }).neq('status', 'scheduled')),
+  ]);
+  return { goals, cards, assigned, started };
+}

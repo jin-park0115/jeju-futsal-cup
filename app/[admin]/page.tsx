@@ -1,8 +1,10 @@
 import Link from 'next/link';
-import { COURTS } from '@/lib/data.ts';
+import { COURTS, recordCounts } from '@/lib/data.ts';
+import { ResetButton } from './reset.tsx';
 
 export default async function AdminHome({ params }: PageProps<'/[admin]'>) {
   const { admin } = await params;
+  const counts = await recordCounts();
   const links = [
     ['draw', '🎲 추첨 배정'],
     ...COURTS.map((n) => [`court/${n}`, `${n}구장 입력`]),
@@ -16,6 +18,7 @@ export default async function AdminHome({ params }: PageProps<'/[admin]'>) {
           {label}
         </Link>
       ))}
+      <ResetButton adminKey={admin} counts={counts} />
     </div>
   );
 }

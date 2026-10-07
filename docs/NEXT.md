@@ -26,10 +26,10 @@
     → 고등부 4강·결승·3·4위전(직접 지정·승부차기) → 공개 화면 자동 갱신·최종 순위
   - 단계별 "기대 결과"를 적어 이상한 점을 바로 알 수 있게
 - [ ] **리허설 실행**: 운영진이 실제 폰으로. 느리거나 헷갈린 점·버그를 모아서 수정 요청
-- [ ] **리허설 후 초기화**: `node --env-file=.env.local scripts/fake-data.mts --reset`
+- [ ] **리허설 후 초기화**: 운영진 메뉴 맨 아래 "⚠ 대회 데이터 초기화"(확인 후 "초기화" 입력) 또는 `node --env-file=.env.local scripts/fake-data.mts --reset`
 
 ## 대회 당일 아침 체크리스트
-- [ ] 리허설 기록 초기화(`fake-data.mts --reset`)
+- [ ] 리허설 기록 초기화: 운영진 메뉴 맨 아래 "⚠ 대회 데이터 초기화" (노트북 없이 폰으로 가능)
 - [ ] 중등부 팀 수 확인 → 바뀌었으면 Supabase SQL Editor에서 `supabase/middle/4.sql`·`5.sql`·`6.sql` 중 하나 실행
 - [ ] 명단이 바뀌었으면 xlsx를 `data/`에 넣고 import
   - 미리보기: `node scripts/import-teams.mts data/<파일>.xlsx`
